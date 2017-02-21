@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"bytes"
 )
 
 type Video struct {
@@ -34,6 +35,29 @@ func (c *appContext) insert(v Video) {
 	fmt.Println("id: ", lastInsertId)
 }
 
+func (c *appContext) update(v Video) {
+	var buf bytes.Buffer
+	if v.video_id < 1 {
+		return
+	}
+	buf.WriteString("UPDATE video SET ")
+	if v.video_name != "" {
+		buf.WriteString("video_name=$1,")
+	}
+	if v.video_map_key != "" {
+		buf.WriteString("video_map_key=$2,")
+	}
+	buf.Truncate(buf.Len()-1)
+	buf.WriteString(" WHERE video_id=$3")
+
+	stmt, err := c.db.Prepare(buf.String())
+	checkErr(err)
+	result, err:= stmt.Exec(v.video_name, v.video_map_key, v.video_id)
+	affectNum, err:= result.RowsAffected()
+	checkErr(err)
+	fmt.Println("update affectNum: ", affectNum)
+}
+
 func (c *appContext) query() {
 	rows, err:=c.db.Query("SELECT * FROM video")
 	checkErr(err)
@@ -52,7 +76,7 @@ func (c *appContext) delete(video_id int) {
 	result, err:= stmt.Exec(video_id)
 	affectNum, err:= result.RowsAffected()
 	checkErr(err)
-	fmt.Println("affectNum: ", affectNum)
+	fmt.Println("delete affectNum: ", affectNum)
 }
 
 func checkErr(err error) {
@@ -65,7 +89,8 @@ func main() {
 	c, err:= connectDB("postgres", "user=bilibili password=0663 dbname=nodejs sslmode=disable")
 	defer c.db.Close()
 	checkErr(err)
-	c.insert(Video{video_id: 0,video_name:"崩坏3rd", video_map_key:"av79849534"})
+	//c.insert(Video{video_id: 0,video_name:"崩坏3rd", video_map_key:"av79849534"})
 
 	c.query()
+	c.update(Video{video_id: 2,video_name:"崩坏3rd 0.98", video_map_key:"av79849534"})
 }
