@@ -132,7 +132,7 @@ func (self *session) recvGroutine() {
 	for {
 		e,err = self.stream.Read()
 		if err != nil {
-			fmt.Println("解包错误: ", e)
+			fmt.Println("解包错误: ", err.Error())
 			break
 		}
 		if self.OnReveive != nil {

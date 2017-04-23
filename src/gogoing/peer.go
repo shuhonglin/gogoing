@@ -14,7 +14,7 @@ type Peer interface {
 	Start(address string) Peer
 
 	// 关闭
-	Stop()
+	Stop(ch chan bool)
 
 	// 名字
 	SetName(name string)

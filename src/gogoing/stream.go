@@ -7,6 +7,7 @@ import (
 	"sync"
 	"encoding/binary"
 	"errors"
+	"fmt"
 )
 
 const HeaderSize  = 2
@@ -171,8 +172,8 @@ func NewStream(conn io.ReadWriteCloser) (stream *evStream) {
 		outputWriter:bufio.NewWriter(conn),
 		outputHeadBuffer:bytes.NewBuffer([]byte{}),
 		inputHeadBuffer:make([]byte, HeaderSize),
-		encoder:NewDefaultEncoder(conn),
-		decoder:NewDefaultDecoder(conn),
+		encoder:NewDefaultEncoder(),
+		decoder:NewDefaultDecoder(),
 	}
 	stream.inputHeadReader = bytes.NewReader(stream.inputHeadBuffer)
 	return

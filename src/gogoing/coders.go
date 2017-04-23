@@ -1,7 +1,8 @@
 package gogoing
 
 import (
-	"io"
+	"fmt"
+	"encoding/json"
 )
 
 type Encoder interface {
@@ -14,11 +15,10 @@ type Decoder interface {
 
 
 type DefaultEncoder struct {
-	w io.Writer
 }
 
-func NewDefaultEncoder(w io.Writer) *DefaultEncoder {
-	return &DefaultEncoder{w: w}
+func NewDefaultEncoder() *DefaultEncoder {
+	return &DefaultEncoder{}
 }
 
 func (e *DefaultEncoder) Encode(v *Event) (data []byte, err error) {
@@ -26,13 +26,16 @@ func (e *DefaultEncoder) Encode(v *Event) (data []byte, err error) {
 }
 
 type DefaultDecoder struct {
-	r io.Reader
 }
 
-func NewDefaultDecoder(r io.Reader) *DefaultDecoder {
-	return &DefaultDecoder{r : r}
+func NewDefaultDecoder() *DefaultDecoder {
+	return &DefaultDecoder{}
 }
 
 func (d *DefaultDecoder) Decode(data []byte) (v *Event, err error) {
+	tmpEvent := &DataEvent{}
+	json.Unmarshal(data, tmpEvent)
+	fmt.Println(string(tmpEvent.Data))
+	v = &tmpEvent.Event
 	return
 }

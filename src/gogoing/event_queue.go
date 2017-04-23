@@ -2,7 +2,6 @@ package gogoing
 
 import (
 	"time"
-	"fmt"
 )
 
 type EventQueue struct {
@@ -23,7 +22,6 @@ func (self *EventQueue) DelayPost(e Event, dur time.Duration) {
 
 func (self *EventQueue) StartLoop() {
 	go func() {
-		fmt.Println("length: ", len(self.queue))
 		for v:= range self.queue {
 			v.Sess.Dispatch(&v)
 		}

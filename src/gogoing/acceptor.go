@@ -44,19 +44,20 @@ func (self *socketAccepter) Start(address string) Peer {
 
 				log.Printf("#accepted(%s) sessionId: %d", self.peer.Name(), ses.ID())
 				// 发送链接事件
-				ses.recvQueue.Post(Event{Type:CONNECT_EVENT})
+				//ses.recvQueue.Post(Event{Type:CONNECT_EVENT, Sess:ses})
 			}()
 		}
 	}()
 	return self
 }
 
-func (self *socketAccepter) Stop() {
+func (self *socketAccepter) Stop(ch chan bool) {
 	if !self.running {
 		return
 	}
 	self.running = false
 	self.listener.Close()
+	ch<-self.running
 }
 
 func NewAcceptor() Peer {

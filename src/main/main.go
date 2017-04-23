@@ -6,7 +6,6 @@ import (
 	//_ "github.com/lib/pq"
 	"bytes"
 	"gogoing"
-	"time"
 )
 
 type Video struct {
@@ -101,9 +100,13 @@ func main() {
 	fmt.Println(d_list.Len(), d_list.GetFirst().Value, d_list.GetLast().Value)
 	u1 := uuid.NewV4()*/
 
-	acceptor := gogoing.NewAcceptor().Start("192.168.0.181:7000")
-	fmt.Println(acceptor.Name())
-	time.Sleep(time.Hour*1)
-
+	ch := make(chan bool)
+	acceptor := gogoing.NewAcceptor()
+	acceptor.SetMaxPacketSize(1024*1024)
+	acceptor.EventDispatcher().AddHandler(gogoing.CONNECT_EVENT, gogoing.NewEventHandler(gogoing.CONNECT_EVENT))
+	acceptor.EventDispatcher().AddHandler(gogoing.INTERNET_EVENT, gogoing.NewEventHandler(gogoing.INTERNET_EVENT))
+	fmt.Println("start server at 192.168.2.106:7000")
+	acceptor.Start("192.168.2.106:7000")
+	<-ch
 	//acceptor.EventDispatcher().AddHandler(gogoing.CONNECT_EVENT, event.NewEventHandler(gogoing.CONNECT_EVENT))
 }
