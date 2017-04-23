@@ -3,7 +3,7 @@ package gogoing
 import "fmt"
 
 type EventHandler interface {
-	OnEvent(e *Event)
+	OnEvent(e Event)
 
 	EventType() uint8
 }
@@ -12,8 +12,11 @@ type eventHandler struct {
 	eventType uint8
 }
 
-func (self *eventHandler) OnEvent(e *Event) {
-	fmt.Println(e.Sess.ID(),e.Type)
+func (self *eventHandler) OnEvent(e Event) {
+	fmt.Println(e.GetSess().ID(),e.GetType())
+	if e.GetType() == INTERNET_EVENT {
+		fmt.Println("on event -> ", string(e.(*InternetEvent).Data))
+	}
 }
 
 func (self *eventHandler) EventType() uint8 {
@@ -25,7 +28,10 @@ type dataEventHandler struct {
 	data []byte
 }
 
-func (self *dataEventHandler) OnEvent(e *Event) {
+func (self *dataEventHandler) OnEvent(e Event) {
+	if e.GetType() == INTERNET_EVENT {
+		fmt.Println(e.GetType())
+	}
 	fmt.Println(e)
 }
 

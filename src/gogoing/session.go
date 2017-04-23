@@ -7,8 +7,9 @@ import (
 )
 
 type Status int
+
 const (
-	_ Status = iota
+	_             Status = iota
 	NOT_CONNECTED
 	CONNECTING
 	CONNECTED
@@ -16,7 +17,7 @@ const (
 )
 
 const (
-	_ uint8 = iota
+	_                  uint8 = iota
 	CLOSE_EVENT
 	INTERNET_EVENT
 	CONNECT_EVENT
@@ -24,8 +25,7 @@ const (
 )
 
 type Session interface {
-
-	Send(*Event)
+	Send(e Event)
 
 	Close()
 
@@ -35,11 +35,11 @@ type Session interface {
 
 	Peer() Peer
 
-	Dispatch(e *Event)
+	Dispatch(e Event)
 }
 
 type session struct {
-	stream EventStream  // 数据流编解码
+	stream EventStream // 数据流编解码
 
 	OnReveive func()
 
@@ -58,7 +58,6 @@ type session struct {
 	recvQueue *EventQueue
 
 	status Status
-
 }
 
 func (self *session) ID() int64 {
@@ -69,7 +68,7 @@ func (self *session) Peer() Peer {
 	return self.peer
 }
 
-func (self *session) Send(e *Event) {
+func (self *session) Send(e Event) {
 	if e != nil {
 		self.sendList.Add(e)
 	}
@@ -77,29 +76,38 @@ func (self *session) Send(e *Event) {
 
 func (self *session) Close() {
 	// todo 发送关闭或异常的event
-	self.sendList.Add(&Event{Type: CLOSE_EVENT, Sess:self})
+	closeEvent := new(CloseEvent)
+	closeEvent.Type = CLOSE_EVENT
+	closeEvent.ID = 0
+	closeEvent.Sess = self
+	self.sendList.Add(closeEvent)
 }
 
 func (self *session) ExceptionClose() {
 	// todo 发送关闭或异常的event
-	self.sendList.Add(&Event{Type: EXCEPT_CLOSE_EVENT, Sess:self})
+	//self.sendList.Add(&Event{Type: EXCEPT_CLOSE_EVENT, Sess:self})
+	exceptEvent := new(ExceptEvent)
+	exceptEvent.Type = EXCEPT_CLOSE_EVENT
+	exceptEvent.ID = 0
+	exceptEvent.Sess = self
+	self.sendList.Add(exceptEvent)
 }
 
-func (self *session) Dispatch(e *Event) {
-	for _, handler := range self.peer.EventDispatcher().GetHandlers(e.Type){
+func (self *session) Dispatch(e Event) {
+	for _, handler := range self.peer.EventDispatcher().GetHandlers(e.GetType()) {
 		handler.OnEvent(e)
 	}
 }
 
 func (self *session) sendGroutine() {
 
-	var writeList []*Event
+	var writeList []Event
 	for {
 		writeList = self.sendList.PickEventList()
 		willExit := false
 
-		for _,e := range writeList {
-			if e.Type == EXCEPT_CLOSE_EVENT { // 收到recvGoutine发送的异常结束事件
+		for _, e := range writeList {
+			if e.GetType() == EXCEPT_CLOSE_EVENT { // 收到recvGoutine发送的异常结束事件
 				willExit = true
 				break
 			}
@@ -110,7 +118,7 @@ func (self *session) sendGroutine() {
 			}
 		}
 
-		if err:= self.stream.Flush(); err != nil {
+		if err := self.stream.Flush(); err != nil {
 			willExit = true
 		}
 
@@ -128,9 +136,9 @@ exitsendloop:
 
 func (self *session) recvGroutine() {
 	var err error
-	var e *Event
+	var e Event
 	for {
-		e,err = self.stream.Read()
+		e, err = self.stream.Read()
 		if err != nil {
 			fmt.Println("解包错误: ", err.Error())
 			break
@@ -138,7 +146,8 @@ func (self *session) recvGroutine() {
 		if self.OnReveive != nil {
 			self.OnReveive()
 		}
-		self.recvQueue.Post(*e)
+		e.SetSess(self)
+		self.recvQueue.Post(e)
 	}
 
 	if self.needNotifyWrite {
@@ -150,12 +159,12 @@ func (self *session) recvGroutine() {
 
 func newSession(conn io.ReadWriteCloser, peer Peer) *session {
 	self := &session{
-		stream : NewStream(conn),
-		peer:peer,
-		needNotifyWrite:true,
-		sendList:NewEventList(),
-		recvQueue:NewEventQueue(),
-		status:NOT_CONNECTED,
+		stream:          NewStream(conn),
+		peer:            peer,
+		needNotifyWrite: true,
+		sendList:        NewEventList(),
+		recvQueue:       NewEventQueue(),
+		status:          NOT_CONNECTED,
 	}
 	self.stream.MaxPacketSize(peer.MaxPacketSize())
 	self.recvQueue.StartLoop()

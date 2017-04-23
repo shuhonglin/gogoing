@@ -7,7 +7,6 @@ import (
 	"sync"
 	"encoding/binary"
 	"errors"
-	"fmt"
 )
 
 const HeaderSize  = 2
@@ -20,8 +19,8 @@ var (
 
 
 type EventStream interface {
-	Read()(*Event, error)
-	Write(*Event) error
+	Read()(Event, error)
+	Write(Event) error
 	Flush() error
 	Close() error
 	Raw() io.ReadWriteCloser
@@ -49,7 +48,7 @@ func (self *evStream) MaxPacketSize(size int) {
 	self.maxPacketSize = size
 }
 
-func (self *evStream) Read() (e *Event, err error) {
+func (self *evStream) Read() (e Event, err error) {
 	if _, err = self.inputHeadReader.Seek(0, 0); err != nil { // headReader重置读取位置
 		return nil, err
 	}
@@ -78,7 +77,7 @@ func (self *evStream) Read() (e *Event, err error) {
 	return
 }
 
-func (self *evStream) Write(e *Event) (err error) {
+func (self *evStream) Write(e Event) (err error) {
 	self.streamMutex.Lock()
 	defer self.streamMutex.Unlock()
 
