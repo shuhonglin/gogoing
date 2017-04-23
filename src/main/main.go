@@ -3,8 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
+	//_ "github.com/lib/pq"
 	"bytes"
+	"gogoing"
+	"time"
 )
 
 type Video struct {
@@ -86,11 +88,22 @@ func checkErr(err error) {
 }
 
 func main() {
-	c, err:= connectDB("postgres", "user=bilibili password=0663 dbname=nodejs sslmode=disable")
+	/*c, err:= connectDB("postgres", "user=bilibili password=0663 dbname=nodejs sslmode=disable")
 	defer c.db.Close()
 	checkErr(err)
 	//c.insert(Video{video_id: 0,video_name:"崩坏3rd", video_map_key:"av79849534"})
 
 	c.query()
-	c.update(Video{video_id: 2,video_name:"崩坏3rd 0.98", video_map_key:"av79849534"})
+	c.update(Video{video_id: 2,video_name:"崩坏3rd 0.98", video_map_key:"av79849534"})*/
+	/*d_list := structure.NewDoubleLinkList()
+	d_list.LinkFirst(&structure.Node{Value:"123lsh"})
+	d_list.LinkFirst(&structure.Node{Value:"node_first"})
+	fmt.Println(d_list.Len(), d_list.GetFirst().Value, d_list.GetLast().Value)
+	u1 := uuid.NewV4()*/
+
+	acceptor := gogoing.NewAcceptor().Start("192.168.0.181:7000")
+	fmt.Println(acceptor.Name())
+	time.Sleep(time.Hour*1)
+
+	//acceptor.EventDispatcher().AddHandler(gogoing.CONNECT_EVENT, event.NewEventHandler(gogoing.CONNECT_EVENT))
 }

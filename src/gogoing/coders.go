@@ -2,15 +2,14 @@ package gogoing
 
 import (
 	"io"
-	"event"
 )
 
 type Encoder interface {
-	Encode(v *event.Event) (data []byte, err error)
+	Encode(v *Event) (data []byte, err error)
 }
 
 type Decoder interface {
-	Decode(data []byte) (v *event.Event, err error)
+	Decode(data []byte) (v *Event, err error)
 }
 
 
@@ -22,7 +21,7 @@ func NewDefaultEncoder(w io.Writer) *DefaultEncoder {
 	return &DefaultEncoder{w: w}
 }
 
-func (e *DefaultEncoder) Encode(v *event.Event) (data []byte, err error) {
+func (e *DefaultEncoder) Encode(v *Event) (data []byte, err error) {
 	return
 }
 
@@ -34,6 +33,6 @@ func NewDefaultDecoder(r io.Reader) *DefaultDecoder {
 	return &DefaultDecoder{r : r}
 }
 
-func (d *DefaultDecoder) Decode(data []byte) (v *event.Event, err error) {
+func (d *DefaultDecoder) Decode(data []byte) (v *Event, err error) {
 	return
 }

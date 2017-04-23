@@ -1,19 +1,19 @@
-package structure
+package gogoing
 
 import (
-	"event"
 	"time"
+	"fmt"
 )
 
 type EventQueue struct {
-	queue chan *event.Event
+	queue chan Event
 }
 
-func (self *EventQueue) Post(e *event.Event) {
+func (self *EventQueue) Post(e Event) {
 	self.queue <- e
 }
 
-func (self *EventQueue) DelayPost(e *event.Event, dur time.Duration) {
+func (self *EventQueue) DelayPost(e Event, dur time.Duration) {
 	go func() {
 		time.AfterFunc(dur, func() {
 			self.Post(e)
@@ -23,15 +23,16 @@ func (self *EventQueue) DelayPost(e *event.Event, dur time.Duration) {
 
 func (self *EventQueue) StartLoop() {
 	go func() {
+		fmt.Println("length: ", len(self.queue))
 		for v:= range self.queue {
-			v.Sess.Dispatch(v)
+			v.Sess.Dispatch(&v)
 		}
 	}()
 }
 
 func NewEventQueue() *EventQueue {
 	self := &EventQueue{
-		queue: make(chan *event.Event, 10),
+		queue: make(chan Event, 10),
 	}
 	return self
 }

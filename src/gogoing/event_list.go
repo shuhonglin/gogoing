@@ -1,18 +1,17 @@
-package structure
+package gogoing
 
 import (
-	"event"
 	"sync"
 )
 
 type EventList struct {
-	list  []*event.Event
+	list  []*Event
 	listGuard sync.Mutex
 
 	listCond *sync.Cond
 }
 
-func (self *EventList) Add(e *event.Event) {
+func (self *EventList) Add(e *Event) {
 	self.listGuard.Lock()
 	self.list = append(self.list, e)
 	self.listGuard.Unlock()
@@ -25,13 +24,13 @@ func (self *EventList) Reset() {
 	self.listGuard.Unlock()
 }
 
-func (self *EventList) PickEventList() []*event.Event {
+func (self *EventList) PickEventList() []*Event {
 	self.listGuard.Lock()
 	for len(self.list) == 0 {
 		self.listCond.Wait()
 	}
 
-	dataList := make([]*event.Event, len(self.list))
+	dataList := make([]*Event, len(self.list))
 	copy(dataList, self.list)
 	self.listGuard.Unlock()
 	return dataList

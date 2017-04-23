@@ -2,8 +2,6 @@ package gogoing
 
 import (
 	"sync"
-	"structure"
-	"event"
 	"fmt"
 	"io"
 )
@@ -27,7 +25,7 @@ const (
 
 type Session interface {
 
-	Send(*event.Event)
+	Send(*Event)
 
 	Close()
 
@@ -37,7 +35,7 @@ type Session interface {
 
 	Peer() Peer
 
-	Dispatch(e *event.Event)
+	Dispatch(e *Event)
 }
 
 type session struct {
@@ -55,11 +53,9 @@ type session struct {
 
 	needNotifyWrite bool
 
-	sendList *structure.EventList
+	sendList *EventList
 
-	recvQueue *structure.EventQueue
-
-	eventDispatcher event.EventDispatcher
+	recvQueue *EventQueue
 
 	status Status
 
@@ -73,7 +69,7 @@ func (self *session) Peer() Peer {
 	return self.peer
 }
 
-func (self *session) Send(e *event.Event) {
+func (self *session) Send(e *Event) {
 	if e != nil {
 		self.sendList.Add(e)
 	}
@@ -81,23 +77,23 @@ func (self *session) Send(e *event.Event) {
 
 func (self *session) Close() {
 	// todo 发送关闭或异常的event
-	self.sendList.Add(&event.Event{Type: CLOSE_EVENT, Sess:self})
+	self.sendList.Add(&Event{Type: CLOSE_EVENT, Sess:self})
 }
 
 func (self *session) ExceptionClose() {
 	// todo 发送关闭或异常的event
-	self.sendList.Add(&event.Event{Type: EXCEPT_CLOSE_EVENT, Sess:self})
+	self.sendList.Add(&Event{Type: EXCEPT_CLOSE_EVENT, Sess:self})
 }
 
-func (self *session) Dispatch(e *event.Event) {
-	for _, handler := range self.eventDispatcher.GetHandlers(e.Type){
+func (self *session) Dispatch(e *Event) {
+	for _, handler := range self.peer.EventDispatcher().GetHandlers(e.Type){
 		handler.OnEvent(e)
 	}
 }
 
 func (self *session) sendGroutine() {
 
-	var writeList []*event.Event
+	var writeList []*Event
 	for {
 		writeList = self.sendList.PickEventList()
 		willExit := false
@@ -132,7 +128,7 @@ exitsendloop:
 
 func (self *session) recvGroutine() {
 	var err error
-	var e *event.Event
+	var e *Event
 	for {
 		e,err = self.stream.Read()
 		if err != nil {
@@ -142,7 +138,7 @@ func (self *session) recvGroutine() {
 		if self.OnReveive != nil {
 			self.OnReveive()
 		}
-		self.recvQueue.Post(e)
+		self.recvQueue.Post(*e)
 	}
 
 	if self.needNotifyWrite {
@@ -152,14 +148,13 @@ func (self *session) recvGroutine() {
 	self.endSync.Done()
 }
 
-func newSession(conn io.ReadWriteCloser, peer Peer, eventDispatcher event.EventDispatcher) *session {
+func newSession(conn io.ReadWriteCloser, peer Peer) *session {
 	self := &session{
 		stream : NewStream(conn),
 		peer:peer,
 		needNotifyWrite:true,
-		sendList:structure.NewEventList(),
-		recvQueue:structure.NewEventQueue(),
-		eventDispatcher:eventDispatcher,
+		sendList:NewEventList(),
+		recvQueue:NewEventQueue(),
 		status:NOT_CONNECTED,
 	}
 	self.stream.MaxPacketSize(peer.MaxPacketSize())

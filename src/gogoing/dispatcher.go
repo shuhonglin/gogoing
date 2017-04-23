@@ -1,4 +1,4 @@
-package event
+package gogoing
 
 type EventDispatcher interface {
 	AddHandler(eventType uint8, handler EventHandler)
@@ -27,7 +27,7 @@ func (self *eventDispatcher) AddHandler(eventType uint8, handler EventHandler) {
 	if !ok {
 		handlers = make([]EventHandler, 0)
 	}
-	handlers = append(handlers, &handler)
+	handlers = append(handlers, handler)
 
 	self.handlerByPeer[eventType] = handlers
 }
