@@ -94,8 +94,13 @@ func (self *session) ExceptionClose() {
 }
 
 func (self *session) Dispatch(e Event) {
-	for _, handler := range self.peer.EventDispatcher().GetHandlers(e.GetType()) {
-		handler.OnEvent(e)
+	handlers := self.peer.EventDispatcher().GetHandlers(e.GetType())
+	if len(handlers)>0 {
+		for _, handler := range  handlers{
+			handler.OnEvent(e)
+		}
+	} else {
+		fmt.Println("unknown event type -> ", e.GetType())
 	}
 }
 
@@ -140,7 +145,10 @@ func (self *session) recvGroutine() {
 	for {
 		e, err = self.stream.Read()
 		if err != nil {
-			fmt.Println("解包错误: ", err.Error())
+			if err==io.EOF {
+				fmt.Println("客户端断开连接: ", err.Error())
+				self.Close()	// 发送客户端断开连接的event
+			}
 			break
 		}
 		if self.OnReveive != nil {
@@ -158,7 +166,7 @@ func (self *session) recvGroutine() {
 }
 
 func newSession(conn io.ReadWriteCloser, peer Peer) *session {
-	self := &session{
+	self := &session {
 		stream:          NewStream(conn),
 		peer:            peer,
 		needNotifyWrite: true,

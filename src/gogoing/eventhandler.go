@@ -16,6 +16,8 @@ func (self *eventHandler) OnEvent(e Event) {
 	fmt.Println(e.GetSess().ID(),e.GetType())
 	if e.GetType() == INTERNET_EVENT {
 		fmt.Println("on event -> ", string(e.(*InternetEvent).Data))
+	} else if e.GetType() == 10 {
+		fmt.Println("on event -> ", string(e.(*DataEvent).Data))
 	}
 }
 
