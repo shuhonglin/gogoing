@@ -21,7 +21,7 @@ func SetConfig(filepath string) (c *Config) {
 }
 
 func (c *Config) GetValue(section, name string) string {
-	return c.confmap[section][name]
+	return c.confmap[strings.ToLower(section)][name]
 }
 
 func (c *Config) GetSection(section string) map[string]string {
@@ -34,7 +34,7 @@ func (c *Config) SetValue(section, key, value string) bool {
 		c.confmap[section][key] = value
 		return true
 	} else {
-		c.confmap[section] = make(map[string]string)
+		c.confmap[strings.ToLower(section)] = make(map[string]string)
 		c.confmap[section][key] = value
 		return false
 	}
@@ -64,7 +64,7 @@ func (c *Config) readList() map[string]map[string]string {
 		case len(line) == 0:
 		case line[0] == '#':
 		case line[0] == '[' && line[len(line)-1] == ']':
-			section = strings.TrimSpace(line[1:len(line)-1])
+			section = strings.ToLower(strings.TrimSpace(line[1:len(line)-1]))
 			if _,ok := c.confmap[section]; !ok {
 				c.confmap[section] = make(map[string]string)
 			}
