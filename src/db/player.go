@@ -13,3 +13,11 @@ type Player struct {
 	PosY int16
 	Direction byte
 }
+
+type PlayerProxy struct {
+
+}
+
+func (self *PlayerProxy) QueryPlayer() {
+
+}
