@@ -4,6 +4,7 @@ import (
 	"sync"
 	"fmt"
 	"io"
+	"component"
 )
 
 type Status int
@@ -57,6 +58,8 @@ type session struct {
 
 	recvQueue *EventQueue
 
+	components *component.Component
+
 	status Status
 }
 
@@ -95,8 +98,8 @@ func (self *session) ExceptionClose() {
 
 func (self *session) Dispatch(e Event) {
 	handlers := self.peer.EventDispatcher().GetHandlers(e.GetType())
-	if len(handlers)>0 {
-		for _, handler := range  handlers{
+	if len(handlers) > 0 {
+		for _, handler := range handlers {
 			handler.OnEvent(e)
 		}
 	} else {
@@ -145,9 +148,9 @@ func (self *session) recvGroutine() {
 	for {
 		e, err = self.stream.Read()
 		if err != nil {
-			if err==io.EOF {
+			if err == io.EOF {
 				fmt.Println("客户端断开连接: ", err.Error())
-				self.Close()	// 发送客户端断开连接的event
+				self.Close() // 发送客户端断开连接的event
 			}
 			break
 		}
@@ -166,12 +169,13 @@ func (self *session) recvGroutine() {
 }
 
 func newSession(conn io.ReadWriteCloser, peer Peer) *session {
-	self := &session {
+	self := &session{
 		stream:          NewStream(conn),
 		peer:            peer,
 		needNotifyWrite: true,
 		sendList:        NewEventList(),
 		recvQueue:       NewEventQueue(),
+		components:      component.NewComponent(),
 		status:          NOT_CONNECTED,
 	}
 	self.stream.MaxPacketSize(peer.MaxPacketSize())
