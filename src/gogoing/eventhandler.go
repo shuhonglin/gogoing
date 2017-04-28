@@ -1,6 +1,10 @@
 package gogoing
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+	"db"
+)
 
 type EventHandler interface {
 	OnEvent(e Event)
@@ -15,7 +19,9 @@ type eventHandler struct {
 func (self *eventHandler) OnEvent(e Event) {
 	fmt.Println(e.GetSess().ID(),e.GetType())
 	if e.GetType() == INTERNET_EVENT {
-		fmt.Println("on event -> ", string(e.(*InternetEvent).Data))
+		proxy := e.GetSess().Components().CreateIfNotExist(reflect.TypeOf(db.ProxyUserinfo{})).(*db.ProxyUserinfo)
+		userinfo := proxy.LazyLoad(1)
+		fmt.Println("on event -> ", string(e.(*InternetEvent).Data), userinfo.Uid, userinfo.Username, userinfo.Departname)
 	} else if e.GetType() == 10 {
 		fmt.Println("on event -> ", string(e.(*DataEvent).Data))
 	}

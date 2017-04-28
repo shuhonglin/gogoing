@@ -11,16 +11,26 @@ import (
 
 type ProxyUserinfo struct {
 	userinfo *entity.Userinfo
+	timer *time.Timer
 }
 
-func (self *ProxyUserinfo) LazyLoad(uid int64) {
+func (self *ProxyUserinfo) LazyLoad(id int64) *entity.Userinfo {
 	if self.userinfo == nil {
 		self.userinfo = new(entity.Userinfo)
-		err := GogoingDB.Select(self.userinfo, "SELECT * FROM userinfo WHERE uid=$1", uid)
+		err := GogoingDB.Get(self.userinfo, "SELECT * FROM go_schemas.userinfo WHERE uid=$1", id)
 		if err!=nil {
 			fmt.Println("Load userinfo error:", err)
 		}
 	}
+	return self.userinfo
+}
+
+func (self *ProxyUserinfo) SetTimer(timer *time.Timer) {
+	self.timer = timer
+}
+
+func (self *ProxyUserinfo) Timer() *time.Timer {
+	return self.timer
 }
 
 func (self *ProxyUserinfo) Save() {

@@ -37,6 +37,8 @@ type Session interface {
 	Peer() Peer
 
 	Dispatch(e Event)
+
+	Components() *component.Component
 }
 
 type session struct {
@@ -79,11 +81,13 @@ func (self *session) Send(e Event) {
 
 func (self *session) Close() {
 	// todo 发送关闭或异常的event
-	closeEvent := new(CloseEvent)
+	/*closeEvent := new(CloseEvent)
 	closeEvent.Type = CLOSE_EVENT
 	closeEvent.ID = 0
 	closeEvent.Sess = self
-	self.sendList.Add(closeEvent)
+	self.sendList.Add(closeEvent)*/
+	self.components.Stop()
+	self.status = CLOSED
 }
 
 func (self *session) ExceptionClose() {
@@ -105,6 +109,10 @@ func (self *session) Dispatch(e Event) {
 	} else {
 		fmt.Println("unknown event type -> ", e.GetType())
 	}
+}
+
+func (self *session) Components() *component.Component {
+	return self.components
 }
 
 func (self *session) sendGroutine() {
@@ -193,5 +201,7 @@ func newSession(conn io.ReadWriteCloser, peer Peer) *session {
 	go self.recvGroutine()
 
 	go self.sendGroutine()
+
+
 	return self
 }
